@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,7 +15,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import ru.skillbranch.devintensive.extensions.hideKeyboard
 import ru.skillbranch.devintensive.models.Bender
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, TextView.OnEditorActionListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 
 
@@ -48,7 +49,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, TextView.OnEdito
         textTxt.text = benderObj.askQuestion()
         sendBtn.setOnClickListener(this)
         benderImage.setOnClickListener(this)
-        messageEt.setOnEditorActionListener(this)
+        messageEt.setOnEditorActionListener(DoneOnEditorActionListener())
+        hideKeyboard()
     }
 
     override fun onRestart() {
@@ -88,16 +90,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, TextView.OnEdito
            hideKeyboard()
         }
     }
-    override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
-        sendMessage()
-        return true
-    }
+
     private fun sendMessage() {
         val (phrase, color) = benderObj.listenAnswer(messageEt.text.toString().toLowerCase())
         messageEt.setText("")
         val (r, g, b) = color
         benderImage.setColorFilter(Color.rgb(r, g, b), PorterDuff.Mode.MULTIPLY)
         textTxt.text = phrase
+    }
+
+    inner class DoneOnEditorActionListener : TextView.OnEditorActionListener {
+        override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent?): Boolean {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard()
+                sendMessage()
+                return true
+            }
+            return false
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
